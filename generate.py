@@ -115,14 +115,34 @@ class CrosswordCreator():
         False if no revision was made.
         """
        
+        # overlaps = self.crossword.overlaps
+        # overlap = overlaps[x, y]
+  
+        # if overlap is None:
+        #     return False
+        # # remove any words from x that are not binary consistent with y
+        # self.domains[x] = {x for x in self.domains[x] if any(x[overlap[0]] == y[overlap[1]] for y in self.domains[y])}
+        # return True
         overlaps = self.crossword.overlaps
         overlap = overlaps[x, y]
-  
+        
         if overlap is None:
             return False
-        # remove any words from x that are not binary consistent with y
-        self.domains[x] = {x for x in self.domains[x] if any(x[overlap[0]] == y[overlap[1]] for y in self.domains[y])}
-        return True
+        
+        i, j = overlap  # Unpack the overlap positions
+        
+        revised = False
+        new_domain_x = set()
+        
+        for value_x in self.domains[x]:
+            if any(value_x[i] == value_y[j] for value_y in self.domains[y]):
+                new_domain_x.add(value_x)
+            else:
+                revised = True
+        
+        self.domains[x] = new_domain_x
+        
+        return revised
 
     def ac3(self, arcs=None):
         """
@@ -136,7 +156,8 @@ class CrosswordCreator():
         # if arcs is None, use all arcs
         if arcs is None:
             arcs = list(self.crossword.overlaps)
-        print(arcs)
+        else:
+            arcs = list(arcs)
         while len(arcs) > 0:
             arc = arcs.pop()
             x = arc[0]
