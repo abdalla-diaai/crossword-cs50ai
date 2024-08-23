@@ -3,7 +3,7 @@ import sys
 from crossword import *
 
 
-class CrosswordCreator():
+class CrosswordCreator:
 
     def __init__(self, crossword):
         """
@@ -11,8 +11,7 @@ class CrosswordCreator():
         """
         self.crossword = crossword
         self.domains = {
-            var: self.crossword.words.copy()
-            for var in self.crossword.variables
+            var: self.crossword.words.copy() for var in self.crossword.variables
         }
 
     def letter_grid(self, assignment):
@@ -49,6 +48,7 @@ class CrosswordCreator():
         Save crossword assignment to an image file.
         """
         from PIL import Image, ImageDraw, ImageFont
+
         cell_size = 100
         cell_border = 2
         interior_size = cell_size - 2 * cell_border
@@ -57,9 +57,8 @@ class CrosswordCreator():
         # Create a blank canvas
         img = Image.new(
             "RGBA",
-            (self.crossword.width * cell_size,
-             self.crossword.height * cell_size),
-            "black"
+            (self.crossword.width * cell_size, self.crossword.height * cell_size),
+            "black",
         )
         font = ImageFont.truetype("assets/fonts/OpenSans-Regular.ttf", 80)
         draw = ImageDraw.Draw(img)
@@ -68,19 +67,24 @@ class CrosswordCreator():
             for j in range(self.crossword.width):
 
                 rect = [
-                    (j * cell_size + cell_border,
-                     i * cell_size + cell_border),
-                    ((j + 1) * cell_size - cell_border,
-                     (i + 1) * cell_size - cell_border)
+                    (j * cell_size + cell_border, i * cell_size + cell_border),
+                    (
+                        (j + 1) * cell_size - cell_border,
+                        (i + 1) * cell_size - cell_border,
+                    ),
                 ]
                 if self.crossword.structure[i][j]:
                     draw.rectangle(rect, fill="white")
                     if letters[i][j]:
                         _, _, w, h = draw.textbbox((0, 0), letters[i][j], font=font)
                         draw.text(
-                            (rect[0][0] + ((interior_size - w) / 2),
-                             rect[0][1] + ((interior_size - h) / 2) - 10),
-                            letters[i][j], fill="black", font=font
+                            (
+                                rect[0][0] + ((interior_size - w) / 2),
+                                rect[0][1] + ((interior_size - h) / 2) - 10,
+                            ),
+                            letters[i][j],
+                            fill="black",
+                            font=font,
                         )
 
         img.save(filename)
@@ -104,7 +108,7 @@ class CrosswordCreator():
             for word in words.copy():
                 if len(word) != domain.length:
                     self.domains[domain].remove(word)
-     
+
     def revise(self, x, y):
         """
         Make variable `x` arc consistent with variable `y`.
@@ -114,10 +118,10 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-       
+
         # overlaps = self.crossword.overlaps
         # overlap = overlaps[x, y]
-  
+
         # if overlap is None:
         #     return False
         # # remove any words from x that are not binary consistent with y
@@ -125,23 +129,18 @@ class CrosswordCreator():
         # return True
         overlaps = self.crossword.overlaps
         overlap = overlaps[x, y]
-        
+
         if overlap is None:
             return False
-        
-        i, j = overlap  # Unpack the overlap positions
-        
+        i, j = overlap
         revised = False
         new_domain_x = set()
-        
         for value_x in self.domains[x]:
             if any(value_x[i] == value_y[j] for value_y in self.domains[y]):
                 new_domain_x.add(value_x)
             else:
                 revised = True
-        
         self.domains[x] = new_domain_x
-        
         return revised
 
     def ac3(self, arcs=None):
@@ -168,7 +167,7 @@ class CrosswordCreator():
                 for z in self.crossword.neighbors(x) - {y}:
                     arcs.append((z, x))
         return True
-    
+
     def assignment_complete(self, assignment):
         """
         Return True if `assignment` is complete (i.e., assigns a value to each
@@ -178,13 +177,51 @@ class CrosswordCreator():
             if all(assignment[key] for key in assignment):
                 return True
         return False
+
     def consistent(self, assignment):
         """
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
-
+        # # check for binary constraints
+        # overlaps = self.crossword.overlaps
+        # for k1, v1 in assignment.items():
+        #     for k2, v2 in assignment.items():
+        #         if k1 == k2:
+        #             continue
+        #         if overlaps[k1, k2] is None or (k1, k2) not in overlaps:
+        #             continue
+        #         i, j = self.crossword.overlaps[k1, k2]
+        #         for v1 in assignment[k1]:
+        #             if v1[i] != v2[j]:
+        #                 return False
+                
+        # # check for unary constraints           
+        # for k1, v1 in assignment.items():
+        #     # Check that all words are of the correct length and distinct (unary constraints)
+        #     if len(v1) != k1.length:
+        #         return False
+        #     if list(assignment.values()).count(v1) > 1:
+        #         return False
+        # return True
+        # Check unary constraints
+        values = list(assignment.values())
+        if len(values) != len(set(values)):
+            return False
+        
+        for k1, v1 in assignment.items():
+            if len(v1) != k1.length:
+                return False
+            
+            # Check binary constraints
+            for k2, v2 in assignment.items():
+                if k1 != k2 and (k1, k2) in self.crossword.overlaps:
+                    if self.crossword.overlaps[k1, k2] is not None:
+                        i, j = self.crossword.overlaps[k1, k2]
+                        if v1[i] != v2[j]:
+                            return False   
+        return True
+    
     def order_domain_values(self, var, assignment):
         """
         Return a list of values in the domain of `var`, in order by

@@ -37,8 +37,7 @@ overlap = {(Variable(2, 1, 'down', 5), Variable(1, 12, 'down', 7)): None,
 
 arcs = [(Variable(2, 1, 'across', 12), Variable(2, 1, 'down', 5)), (Variable(2, 1, 'across', 12), Variable(1, 12, 'down', 7)), (Variable(2, 1, 'across', 12), Variable(1, 7, 'down', 7)), (Variable(2, 1, 'across', 12), Variable(4, 4, 'across', 5)), (Variable(6, 5, 'across', 6), Variable(2, 1, 'across', 12)), (Variable(6, 5, 'across', 6), Variable(2, 1, 'down', 5)), (Variable(6, 5, 'across', 6), Variable(1, 12, 'down', 7)), (Variable(6, 5, 'across', 6), Variable(1, 7, 'down', 7)), (Variable(6, 5, 'across', 6), Variable(4, 4, 'across', 5)), (Variable(2, 1, 'down', 5), Variable(2, 1, 'across', 12)), (Variable(2, 1, 'down', 5), Variable(6, 5, 'across', 6)), (Variable(2, 1, 'down', 5), Variable(1, 12, 'down', 7)), (Variable(2, 1, 'down', 5), Variable(1, 7, 'down', 7)), (Variable(2, 1, 'down', 5), Variable(4, 4, 'across', 5)), (Variable(1, 12, 'down', 7), Variable(2, 1, 'across', 12)), (Variable(1, 12, 'down', 7), Variable(6, 5, 'across', 6)), (Variable(1, 12, 'down', 7), Variable(2, 1, 'down', 5)), (Variable(1, 12, 'down', 7), Variable(1, 7, 'down', 7)), (Variable(1, 12, 'down', 7), Variable(4, 4, 'across', 5)), (Variable(1, 7, 'down', 7), Variable(2, 1, 'across', 12)), (Variable(1, 7, 'down', 7), Variable(6, 5, 'across', 6)), (Variable(1, 7, 'down', 7), Variable(2, 1, 'down', 5)), (Variable(1, 7, 'down', 7), Variable(1, 12, 'down', 7)), (Variable(1, 7, 'down', 7), Variable(4, 4, 'across', 5)), (Variable(4, 4, 'across', 5), Variable(2, 1, 'across', 12)), (Variable(4, 4, 'across', 5), Variable(6, 5, 'across', 6)), (Variable(4, 4, 'across', 5), Variable(2, 1, 'down', 5)), (Variable(4, 4, 'across', 5), Variable(1, 12, 'down', 7)), (Variable(4, 4, 'across', 5), Variable(1, 7, 'down', 7))]
 
-assignment = {Variable(2, 1, 'down', 5): "adam", Variable(1, 7, 'down', 7): "sarah", Variable(6, 5, 'across', 6): "abdalla", Variable(4, 4, 'across', 5): "mahmoud", Variable(2, 1, 'across', 12): "ahmed", Variable(1, 12, 'down', 7): ""}
-print(assignment[Variable(1, 12, 'down', 7)])
+assignment = {Variable(2, 1, 'down', 5): "adamo", Variable(1, 7, 'down', 7): "abdalla", Variable(6, 5, 'across', 6): "remotes", Variable(4, 4, 'across', 5): "adamo", Variable(2, 1, 'across', 12): "welcomehomes", Variable(1, 12, 'down', 7): "notsure"}
 
 def main():
 
@@ -53,11 +52,9 @@ def main():
 
     # Generate crossword
     crossword = Crossword(structure, words)
-    print(crossword.variables)
     creator = CrosswordCreator(crossword)
     creator.enforce_node_consistency()
-    print(creator.ac3(arcs=arcs))
-    print(creator.assignment_complete(assignment))
+    print(creator.consistent(assignment))
 
 
 if __name__ == "__main__":
