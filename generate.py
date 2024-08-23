@@ -183,43 +183,23 @@ class CrosswordCreator:
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        # # check for binary constraints
-        # overlaps = self.crossword.overlaps
-        # for k1, v1 in assignment.items():
-        #     for k2, v2 in assignment.items():
-        #         if k1 == k2:
-        #             continue
-        #         if overlaps[k1, k2] is None or (k1, k2) not in overlaps:
-        #             continue
-        #         i, j = self.crossword.overlaps[k1, k2]
-        #         for v1 in assignment[k1]:
-        #             if v1[i] != v2[j]:
-        #                 return False
-                
-        # # check for unary constraints           
-        # for k1, v1 in assignment.items():
-        #     # Check that all words are of the correct length and distinct (unary constraints)
-        #     if len(v1) != k1.length:
-        #         return False
-        #     if list(assignment.values()).count(v1) > 1:
-        #         return False
-        # return True
-        # Check unary constraints
-        values = list(assignment.values())
-        if len(values) != len(set(values)):
-            return False
         
+        overlaps = self.crossword.overlaps
         for k1, v1 in assignment.items():
+             # Check that all words are of the correct length and distinct (unary constraints)
             if len(v1) != k1.length:
                 return False
-            
-            # Check binary constraints
+            if list(assignment.values()).count(v1) > 1:
+                return False
+            # check for binary constraints
             for k2, v2 in assignment.items():
-                if k1 != k2 and (k1, k2) in self.crossword.overlaps:
-                    if self.crossword.overlaps[k1, k2] is not None:
-                        i, j = self.crossword.overlaps[k1, k2]
-                        if v1[i] != v2[j]:
-                            return False   
+                if k1 == k2:
+                    continue
+                if overlaps[k1, k2] is None or (k1, k2) not in overlaps:
+                    continue
+                i, j = self.crossword.overlaps[k1, k2]
+                if v1[i] != v2[j]:
+                        return False
         return True
     
     def order_domain_values(self, var, assignment):
