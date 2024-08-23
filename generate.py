@@ -99,12 +99,12 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
+        # remove words that is not unary consistent
         for domain, words in self.domains.items():
             for word in words.copy():
                 if len(word) != domain.length:
                     self.domains[domain].remove(word)
      
-
     def revise(self, x, y):
         """
         Make variable `x` arc consistent with variable `y`.
@@ -114,7 +114,15 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+       
+        overlaps = self.crossword.overlaps
+        overlap = overlaps[x, y]
+  
+        if overlap is None:
+            return False
+        # remove any words from x that are not binary consistent with y
+        self.domains[x] = {x for x in self.domains[x] if any(x[overlap[0]] == y[overlap[1]] for y in self.domains[y])}
+        return True
 
     def ac3(self, arcs=None):
         """
@@ -125,8 +133,21 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
-
+        # if arcs is None, use all arcs
+        if arcs is None:
+            arcs = list(self.crossword.overlaps)
+        print(arcs)
+        while len(arcs) > 0:
+            arc = arcs.pop()
+            x = arc[0]
+            y = arc[1]
+            if self.revise(x, y):
+                if len(self.domains[x]) == 0:
+                    return False
+                for z in self.crossword.neighbors(x) - {y}:
+                    arcs.append((z, x))
+        return True
+    
     def assignment_complete(self, assignment):
         """
         Return True if `assignment` is complete (i.e., assigns a value to each
