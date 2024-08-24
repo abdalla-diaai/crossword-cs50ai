@@ -52,6 +52,9 @@ def main():
     crossword = Crossword(structure, words)
     creator = CrosswordCreator(crossword)
     creator.enforce_node_consistency()
+    my_dict = {'HELLO': 0, 'COINS': 3}
+    my_dict = dict(sorted(my_dict.items(), key=lambda item: item[1]))
+    print(list(my_dict.keys()))
 
 if __name__ == "__main__":
     main()
