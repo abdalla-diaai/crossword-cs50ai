@@ -118,28 +118,24 @@ class CrosswordCreator:
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-
-        # overlaps = self.crossword.overlaps
-        # overlap = overlaps[x, y]
-
-        # if overlap is None:
-        #     return False
-        # # remove any words from x that are not binary consistent with y
-        # self.domains[x] = {x for x in self.domains[x] if any(x[overlap[0]] == y[overlap[1]] for y in self.domains[y])}
-        # return True
+        # gather all overlaps
         overlaps = self.crossword.overlaps
+        # get overlap between x and y
         overlap = overlaps[x, y]
-
+        # if overlap is None, return None
         if overlap is None:
             return False
         i, j = overlap
         revised = False
         new_domain_x = set()
         for value_x in self.domains[x]:
+            # add only words in x domain that are binary consistent with y
             if any(value_x[i] == value_y[j] for value_y in self.domains[y]):
                 new_domain_x.add(value_x)
             else:
+                # if a word is not binary consistent with y change revised to true
                 revised = True
+        # assign words that are binary consistent with y to x
         self.domains[x] = new_domain_x
         return revised
 
@@ -156,6 +152,7 @@ class CrosswordCreator:
         if arcs is None:
             arcs = list(self.crossword.overlaps)
         else:
+            # if arcs is provided use it
             arcs = list(arcs)
         while len(arcs) > 0:
             arc = arcs.pop()
@@ -173,7 +170,9 @@ class CrosswordCreator:
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
+        # check if all variables in assignment
         if all(key in assignment for key in self.crossword.variables):
+            # check if all variables have a value
             if all(assignment[key] for key in assignment):
                 return True
         return False
@@ -183,10 +182,9 @@ class CrosswordCreator:
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        
         overlaps = self.crossword.overlaps
         for k1, v1 in assignment.items():
-             # Check that all words are of the correct length and distinct (unary constraints)
+            # Check that all words are of the correct length and distinct (unary constraints)
             if len(v1) != k1.length:
                 return False
             if list(assignment.values()).count(v1) > 1:
@@ -199,9 +197,17 @@ class CrosswordCreator:
                     continue
                 i, j = self.crossword.overlaps[k1, k2]
                 if v1[i] != v2[j]:
-                        return False
+                    return False
         return True
-    
+
+    def sort_dict_by_values(self, d):
+        """
+        Helper function.
+
+        Return a list of dictionary (d) keys sorted by dictionary (d) values in ascending order
+        """
+        return sorted(d, key=d.get)
+
     def order_domain_values(self, var, assignment):
         """
         Return a list of values in the domain of `var`, in order by
@@ -209,7 +215,6 @@ class CrosswordCreator:
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-       
         # get values for this var
         domain_values = self.domains[var]
         # initialise dictionary with all domain values and count 0
@@ -233,11 +238,19 @@ class CrosswordCreator:
                             # check for binary constraint
                             if val1[i] != val2[j]:
                                 count += 1
-                    values_dict[val1] = count
-            
+                        values_dict[val1] = count
         # order values in ascending order
         return self.sort_dict_by_values(values_dict)
 
+    def get_min_value_keys(self, d):
+        """
+        Helper function.
+        Return a list of keys with minimum value in dictionary including ties.
+        """
+        # Find the maximum value in the dictionary
+        min_value = min(d.values())
+        # Return the keys that have the maximum value
+        return [key for key, value in d.items() if value == min_value]
 
     def select_unassigned_variable(self, assignment):
         """
@@ -247,25 +260,56 @@ class CrosswordCreator:
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        # dict to hold values of unassinged variables
+        unassigned_vars = {}
+        # add number of domains to each variable
+        for var in self.crossword.variables:
+            if var not in assignment:
+                unassigned_vars[var] = len(self.domains[var])
+        min_var = self.get_min_value_keys(unassigned_vars)
+        # if only one var returned, return var with min number of domains
+        if len(min_var) == 1:
+            return min_var[0]
+        else:
+            # return var with max neighbors or any in case of tie
+            maximum_neighbors = len(self.crossword.neighbors(min_var[0]))
+            max_var = min_var[0]
+            for item in min_var:
+                if len(self.crossword.neighbors(item)) > maximum_neighbors:
+                    maximum_neighbors = len(self.crossword.neighbors(item))
+                    max_var = item
+            return max_var
 
     def backtrack(self, assignment):
         """
         Using Backtracking Search, take as input a partial assignment for the
         crossword and return a complete assignment if possible to do so.
-
         `assignment` is a mapping from variables (keys) to words (values).
-
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        # return complete assignment if it exists.
+        if self.assignment_complete(assignment):
+            return assignment
+        # get one of unassinged variables
+        var = self.select_unassigned_variable(assignment)
+        # order values in variable domain
+        var_values = self.order_domain_values(var, assignment)
+        # iterate through values and check assignment for consistency
+        for val in var_values:
+            new_assignment = assignment.copy()
+            # add new value to assignment
+            new_assignment[var] = val
+            # check for consistency
+            if self.consistent(new_assignment):
+                # recursively call backtrack function
+                result = self.backtrack(new_assignment)
+                return result
+            else:
+                new_assignment.pop(var)
+        # if no result return None
+        return None
 
-    def sort_dict_by_values(self, d):
-        """
-        Return a list of dictionary (d) keys sorted by dictionary (d) values in ascending order
-        """
-        return sorted(d, key=d.get)
-    
+
 def main():
 
     # Check usage
